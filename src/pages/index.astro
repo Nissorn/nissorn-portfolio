@@ -7,7 +7,7 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
 ---
 
 <Layout>
-  <section class="mt-20 mb-24 flex flex-col md:flex-row items-center gap-10">
+  <section class="mt-20 mb-24 flex flex-col md:flex-row items-center gap-10 animate-fade-in-up delay-100">
     <div class="relative w-48 h-48 shrink-0">
       <div class="absolute inset-0 bg-red-500 rounded-2xl blur-md opacity-20 dark:opacity-40"></div>
       <img src="/profile.jpg" alt="Nissorn Koraviyothin" class="relative w-full h-full object-cover rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50" />
@@ -38,16 +38,16 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
     </div>
   </section>
 
-  <section id="tech-specs" class="mb-24">
+  <section id="tech-specs" class="mb-24 animate-fade-in-up delay-200">
     <h3 class="text-xs font-mono text-zinc-500 tracking-widest uppercase mb-8 flex items-center gap-3">
       <span class="w-1.5 h-1.5 bg-red-500"></span>
       Tech Specs
     </h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Languages -->
-      <div class="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 p-6 rounded-lg relative overflow-hidden group">
+      <div class="bg-white/95 dark:bg-black/60 shadow-sm dark:shadow-none backdrop-blur-md border border-zinc-300/80 dark:border-zinc-800/50 p-6 rounded-lg relative overflow-hidden group">
         <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-red-500/20 to-transparent group-hover:via-red-500/50 transition-all duration-300"></div>
-        <h4 class="text-black dark:text-white font-mono text-sm uppercase tracking-wider mb-4 border-b border-zinc-200/50 dark:border-zinc-800/50 pb-2">Languages</h4>
+        <h4 class="text-zinc-900 dark:text-white font-mono text-sm uppercase tracking-wider mb-4 border-b border-zinc-200/50 dark:border-zinc-800/50 pb-2">Languages</h4>
         <div class="flex flex-wrap gap-2 font-mono">
           {['Python', 'C/C++', 'SQL', 'MATLAB'].map((skill) => (
             <span class="bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-zinc-600 dark:text-zinc-400 text-xs px-2 py-1 rounded-md uppercase tracking-wider">
@@ -57,9 +57,9 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
         </div>
       </div>
       <!-- AI & ML -->
-      <div class="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 p-6 rounded-lg relative overflow-hidden group">
+      <div class="bg-white/95 dark:bg-black/60 shadow-sm dark:shadow-none backdrop-blur-md border border-zinc-300/80 dark:border-zinc-800/50 p-6 rounded-lg relative overflow-hidden group">
          <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-red-500/20 to-transparent group-hover:via-red-500/50 transition-all duration-300"></div>
-        <h4 class="text-black dark:text-white font-mono text-sm uppercase tracking-wider mb-4 border-b border-zinc-200/50 dark:border-zinc-800/50 pb-2">AI & ML</h4>
+        <h4 class="text-zinc-900 dark:text-white font-mono text-sm uppercase tracking-wider mb-4 border-b border-zinc-200/50 dark:border-zinc-800/50 pb-2">AI & ML</h4>
         <div class="flex flex-wrap gap-2 font-mono">
           {['OpenCV', 'YOLOv8', 'PyTorch', 'Scikit-learn', 'Pandas', 'Numpy', 'Transformers'].map((skill) => (
             <span class="bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-zinc-600 dark:text-zinc-400 text-xs px-2 py-1 rounded-md uppercase tracking-wider">
@@ -69,9 +69,9 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
         </div>
       </div>
       <!-- Tools -->
-      <div class="bg-white/60 dark:bg-black/60 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 p-6 rounded-lg relative overflow-hidden group">
+      <div class="bg-white/95 dark:bg-black/60 shadow-sm dark:shadow-none backdrop-blur-md border border-zinc-300/80 dark:border-zinc-800/50 p-6 rounded-lg relative overflow-hidden group">
          <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-red-500/20 to-transparent group-hover:via-red-500/50 transition-all duration-300"></div>
-        <h4 class="text-black dark:text-white font-mono text-sm uppercase tracking-wider mb-4 border-b border-zinc-200/50 dark:border-zinc-800/50 pb-2">Tools</h4>
+        <h4 class="text-zinc-900 dark:text-white font-mono text-sm uppercase tracking-wider mb-4 border-b border-zinc-200/50 dark:border-zinc-800/50 pb-2">Tools</h4>
         <div class="flex flex-wrap gap-2 font-mono">
           {['Git/GitHub', 'Linux (Bash)', 'Jupyter', 'Figma'].map((skill) => (
             <span class="bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-zinc-600 dark:text-zinc-400 text-xs px-2 py-1 rounded-md uppercase tracking-wider">
@@ -83,7 +83,7 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
     </div>
   </section>
 
-  <section id="system-log" class="mb-24">
+  <section id="system-log" class="mb-24 animate-fade-in-up delay-300">
     <h3 class="text-xs font-mono text-zinc-500 tracking-widest uppercase mb-8 flex items-center gap-3">
       <span class="w-1.5 h-1.5 bg-red-500"></span>
       System Log
@@ -95,14 +95,14 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
       <div class="relative">
         <span class="absolute -left-[28.5px] top-1.5 w-2 h-2 bg-red-500 ring-4 ring-white dark:ring-black"></span>
         <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
-          <h4 class="text-lg font-bold text-black dark:text-white font-sans tracking-tight">Kasetsart University, Sriracha Campus</h4>
+          <h4 class="text-lg font-bold text-zinc-900 dark:text-white font-sans tracking-tight">Kasetsart University, Sriracha Campus</h4>
           <span class="font-mono text-xs text-zinc-500 uppercase tracking-widest">Expected 2027</span>
         </div>
-        <div class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed p-4 bg-white/30 dark:bg-black/30 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-800/50 rounded-lg">
-          <p class="font-bold text-black dark:text-white mb-2">B.E. Computer Engineering (3rd Year)</p>
+        <div class="text-zinc-700 dark:text-zinc-400 text-sm leading-relaxed p-4 bg-white/95 dark:bg-black/30 shadow-sm dark:shadow-none backdrop-blur-sm border border-zinc-300/80 dark:border-zinc-800/50 rounded-lg">
+          <p class="font-bold text-zinc-900 dark:text-white mb-2">B.E. Computer Engineering (3rd Year)</p>
           <div class="space-y-1 font-mono text-xs">
-            <p>GPA: <span class="text-zinc-800 dark:text-zinc-200">3.01</span></p>
-            <p>Coursework: <span class="text-zinc-800 dark:text-zinc-200">AI & Data Science, Software & Systems</span></p>
+            <p>GPA: <span class="text-zinc-900 dark:text-zinc-200">3.01</span></p>
+            <p>Coursework: <span class="text-zinc-900 dark:text-zinc-200">AI & Data Science, Software & Systems</span></p>
           </div>
         </div>
       </div>
@@ -111,10 +111,10 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
       <div class="relative">
         <span class="absolute -left-[28.5px] top-1.5 w-2 h-2 bg-red-500 ring-4 ring-white dark:ring-black"></span>
         <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
-          <h4 class="text-lg font-bold text-black dark:text-white font-sans tracking-tight">Cybergeek Club</h4>
+          <h4 class="text-lg font-bold text-zinc-900 dark:text-white font-sans tracking-tight">Cybergeek Club</h4>
           <span class="font-mono text-xs text-zinc-500 uppercase tracking-widest">2024 - Present</span>
         </div>
-        <div class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed p-4 bg-white/30 dark:bg-black/30 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-800/50 rounded-lg">
+        <div class="text-zinc-700 dark:text-zinc-400 text-sm leading-relaxed p-4 bg-white/95 dark:bg-black/30 shadow-sm dark:shadow-none backdrop-blur-sm border border-zinc-300/80 dark:border-zinc-800/50 rounded-lg">
           <p>Instructor (Prompt Engineering), Technical Operations (End-to-end management), Data Analyst.</p>
         </div>
       </div>
@@ -123,10 +123,10 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
       <div class="relative">
         <span class="absolute -left-[28.5px] top-1.5 w-2 h-2 bg-red-500 ring-4 ring-white dark:ring-black"></span>
         <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
-          <h4 class="text-lg font-bold text-black dark:text-white font-sans tracking-tight">TESA Top Gun Rally</h4>
+          <h4 class="text-lg font-bold text-zinc-900 dark:text-white font-sans tracking-tight">TESA Top Gun Rally</h4>
           <span class="font-mono text-xs text-zinc-500 uppercase tracking-widest">Nov 2025</span>
         </div>
-        <div class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed p-4 bg-white/30 dark:bg-black/30 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-800/50 rounded-lg">
+        <div class="text-zinc-700 dark:text-zinc-400 text-sm leading-relaxed p-4 bg-white/95 dark:bg-black/30 shadow-sm dark:shadow-none backdrop-blur-sm border border-zinc-300/80 dark:border-zinc-800/50 rounded-lg">
           <p>Embedded systems with MATLAB, YOLO model for Drone Detection.</p>
         </div>
       </div>
@@ -134,7 +134,7 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
     </div>
   </section>
 
-  <section id="projects" class="pt-10 border-t border-zinc-200/50 dark:border-zinc-800/50">
+  <section id="projects" class="pt-10 border-t border-zinc-200/50 dark:border-zinc-800/50 animate-fade-in-up delay-400">
     <h3 class="text-xs font-mono text-zinc-500 tracking-widest uppercase mb-8 flex items-center gap-3">
       <span class="w-1.5 h-1.5 bg-red-500"></span>
       Selected Projects
@@ -143,9 +143,9 @@ const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'))
       {projectsOnly.map((note) => {
         const projectUrl = `/projects/${note.id.replace('01-Projects/', '').replace('.mdx', '').replace('.md', '')}`;
         return (
-          <a href={projectUrl} class="group block bg-white/60 dark:bg-black/60 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-8 rounded-lg hover:border-red-500 dark:hover:border-red-500 transition-all duration-300 relative overflow-hidden">
+          <a href={projectUrl} class="group block bg-white/95 dark:bg-black/60 shadow-sm dark:shadow-none backdrop-blur-xl border border-zinc-300/80 dark:border-zinc-800/50 p-8 rounded-lg hover:border-red-500 dark:hover:border-red-500 transition-all duration-300 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-red-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-            <h4 class="text-xl font-bold text-black dark:text-white mb-3">
+            <h4 class="text-xl font-bold text-zinc-900 dark:text-white mb-3">
               {note.data.title}
             </h4>
             <p class="text-zinc-600 dark:text-zinc-400 mb-6 line-clamp-2 text-sm">
