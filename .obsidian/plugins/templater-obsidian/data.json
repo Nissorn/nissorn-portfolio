@@ -1,0 +1,42 @@
+{
+  "command_timeout": 5,
+  "templates_folder": "src/content/notes/00-Templates",
+  "templates_pairs": [
+    [
+      "",
+      ""
+    ]
+  ],
+  "trigger_on_file_creation": true,
+  "auto_jump_to_cursor": false,
+  "enable_system_commands": false,
+  "shell_path": "",
+  "user_scripts_folder": "",
+  "enable_folder_templates": true,
+  "folder_templates": [
+    {
+      "folder": "src/content/notes/01-Projects",
+      "template": "src/content/notes/00-Templates/Untitled.md"
+    },
+    {
+      "folder": "src/content/notes/02-Blog",
+      "template": "src/content/notes/00-Templates/Untitled.md"
+    }
+  ],
+  "enable_file_templates": false,
+  "file_templates": [
+    {
+      "regex": ".*",
+      "template": ""
+    }
+  ],
+  "syntax_highlighting": true,
+  "syntax_highlighting_mobile": false,
+  "enabled_templates_hotkeys": [
+    ""
+  ],
+  "startup_templates": [
+    ""
+  ],
+  "intellisense_render": 1
+}

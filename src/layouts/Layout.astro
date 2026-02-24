@@ -2,6 +2,7 @@
 // src/layouts/Layout.astro
 import '../styles/global.css'; // <--- ดึง Tailwind มาใช้ตรงนี้
 import Navbar from '../components/Navbar.astro';
+import { ViewTransitions } from 'astro:transitions';
 
 export interface Props {
   title?: string;
@@ -22,6 +23,7 @@ const {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+    <ViewTransitions />
     
     <!-- Primary Meta Tags -->
     <title>{title}</title>
@@ -42,19 +44,24 @@ const {
 
     <!-- Theme Inline Script to prevent FOUC -->
     <script is:inline>
-      const theme = (() => {
-        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-          return localStorage.getItem('theme');
+      const setDarkMode = () => {
+        const theme = (() => {
+          if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+            return localStorage.getItem('theme');
+          }
+          return 'light';
+        })();
+        
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
         }
-        return 'light';
-      })();
-      
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      window.localStorage.setItem('theme', theme);
+        window.localStorage.setItem('theme', theme);
+      };
+
+      setDarkMode();
+      document.addEventListener('astro:after-swap', setDarkMode);
     </script>
 </head>
 <body class="bg-white dark:bg-black bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] text-black dark:text-white min-h-screen transition-colors duration-200">
@@ -71,6 +78,7 @@ const {
     </main>
 
     <script>
+      document.addEventListener('astro:page-load', () => {
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         themeToggleBtn?.addEventListener('click', function() {
@@ -82,6 +90,7 @@ const {
                 localStorage.setItem('theme', 'dark');
             }
         });
+      });
     </script>
 </body>
 </html>
