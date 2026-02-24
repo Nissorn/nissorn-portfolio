@@ -1,0 +1,48 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const allNotes = await getCollection('notes');
+const blogsOnly = allNotes.filter(note => note.id.startsWith('02-Blog/'));
+---
+
+<Layout title="Blog | My Portfolio">
+  <section class="mt-12 mb-10">
+    <h1 class="text-4xl font-bold text-black dark:text-white tracking-tight mb-4 font-sans flex items-center gap-4">
+      Blog
+      <span class="w-3 h-3 bg-red-500 rounded-sm inline-block"></span>
+    </h1>
+    <p class="text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed text-lg">
+      Writings, thoughts, and updates on my projects and learnings.
+    </p>
+  </section>
+
+  <section class="pt-10 border-t border-zinc-200 dark:border-zinc-800">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {blogsOnly.map((note) => {
+        const blogUrl = `/blog/${note.id.replace('02-Blog/', '').replace('.mdx', '').replace('.md', '')}`;
+        return (
+          <a href={blogUrl} class="group block bg-white/60 dark:bg-black/60 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-8 rounded-lg hover:border-red-500 dark:hover:border-red-500 transition-all duration-300 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-red-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+            <h4 class="text-xl font-bold text-black dark:text-white mb-3">
+              {note.data.title}
+            </h4>
+            <div class="text-zinc-500 font-mono text-xs uppercase tracking-wider mb-4">
+              <time>{note.data.date.toISOString().split('T')[0]}</time>
+            </div>
+            <p class="text-zinc-600 dark:text-zinc-400 mb-6 line-clamp-2 text-sm">
+              {note.data.description}
+            </p>
+            <div class="flex flex-wrap gap-2 font-mono">
+              {note.data.tags.map((tag) => (
+                <span class="bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 text-zinc-600 dark:text-zinc-400 text-xs px-2 py-1 rounded-md uppercase tracking-wider">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+</Layout>

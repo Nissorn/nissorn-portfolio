@@ -1,16 +1,15 @@
 ---
-// src/pages/projects/[...slug].astro
+// src/pages/blog/[...slug].astro
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 
 export async function getStaticPaths() {
   const allNotes = await getCollection('notes');
-  const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'));
+  const blogsOnly = allNotes.filter(note => note.id.startsWith('02-Blog/'));
 
-  return projectsOnly.map(entry => ({
+  return blogsOnly.map(entry => ({
     params: { 
-      // แก้ตรงนี้: ให้มันตัดทั้ง .mdx และ .md ทิ้งทั้งคู่
-      slug: entry.id.replace('01-Projects/', '').replace('.mdx', '').replace('.md', '') 
+      slug: entry.id.replace('02-Blog/', '').replace('.mdx', '').replace('.md', '') 
     },
     props: { entry },
   }));
@@ -25,12 +24,12 @@ const wordCount = entry.body.split(/\s+/).length;
 const readingTime = Math.ceil(wordCount / 200);
 ---
 <Layout 
-  title={`${entry.data.title} | My Portfolio`} 
+  title={`${entry.data.title} | Blog | My Portfolio`} 
   description={entry.data.description} 
   image={entry.data.image}
 >
-  <a href="/" class="group text-zinc-500 hover:text-red-500 dark:hover:text-red-500 mb-8 inline-block font-mono text-sm uppercase tracking-widest transition-colors flex items-center gap-2 w-fit">
-    <span class="transform group-hover:-translate-x-1 transition-transform">←</span> Back to Home
+  <a href="/blog" class="group text-zinc-500 hover:text-red-500 dark:hover:text-red-500 mb-8 inline-block font-mono text-sm uppercase tracking-widest transition-colors flex items-center gap-2 w-fit">
+    <span class="transform group-hover:-translate-x-1 transition-transform">←</span> Back to Blog
   </a>
 
   <article class="bg-white/60 dark:bg-black/60 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-8 rounded-lg relative overflow-hidden">
@@ -81,9 +80,9 @@ const readingTime = Math.ceil(wordCount / 200);
       <Content />
       <script src="https://giscus.app/client.js"
         data-repo="Nissorn/nissorn-portfolio"
-        data-repo-id="R_kgDORXveLA"
-        data-category="Announcements"
-        data-category-id="DIC_kwDORXveLM4C3Ha_"
+        data-repo-id="R_kgDONGq-OA"
+        data-category="General"
+        data-category-id="DIC_kwDONGq-OM4Cjy2k"
         data-mapping="pathname"
         data-strict="0"
         data-reactions-enabled="1"
@@ -93,7 +92,7 @@ const readingTime = Math.ceil(wordCount / 200);
         data-lang="en"
         crossorigin="anonymous"
         async>
-    </script>
+      </script>
     </div>
   </article>
 </Layout>
