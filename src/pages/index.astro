@@ -1,17 +1,63 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
 
+const allNotes = await getCollection('notes');
+const projectsOnly = allNotes.filter(note => note.id.startsWith('01-Projects/'));
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout>
+  <section class="mt-20 mb-24 flex flex-col md:flex-row items-center gap-10">
+    <div class="w-48 h-48 rounded-full overflow-hidden border-4 border-slate-800 shadow-xl shrink-0">
+      <img src="/profile.jpg" alt="Nissorn Koraviyothin" class="w-full h-full object-cover" />
+    </div>
+    
+    <div>
+      <h1 class="text-5xl md:text-6xl font-bold text-white tracking-tight mb-4">
+        Hi, I'm <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Nissorn</span>
+      </h1>
+      <h2 class="text-2xl text-slate-300 font-medium mb-4">
+        Computer Engineering @ KU SRC
+      </h2>
+      <p class="text-slate-400 max-w-xl leading-relaxed">
+        AI Developer ที่สนใจด้าน Machine Learning, NLP และ Computer Vision 
+        ปัจจุบันกำลังพัฒนาระบบ Thai Stylometry Identity และเตรียมตัวลุย Internship ที่เวียดนาม
+      </p>
+      
+      <div class="mt-8 flex gap-4">
+        <a href="#projects" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 px-8 rounded-full transition-colors">
+          View Projects
+        </a>
+        <a href="https://github.com/YOUR_GITHUB" target="_blank" class="border border-slate-700 hover:border-slate-500 text-white font-bold py-3 px-8 rounded-full transition-colors">
+          GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects" class="pt-10 border-t border-slate-800">
+    <h3 class="text-3xl font-bold text-white mb-8">Selected Projects</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {projectsOnly.map((note) => {
+        const projectUrl = `/projects/${note.id.replace('01-Projects/', '').replace('.mdx', '').replace('.md', '')}`;
+        return (
+          <a href={projectUrl} class="group block bg-slate-900 border border-slate-800 p-8 rounded-2xl hover:border-emerald-500 hover:shadow-[0_0_30px_rgba(52,211,153,0.1)] transition-all hover:-translate-y-1">
+            <h4 class="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors mb-3">
+              {note.data.title}
+            </h4>
+            <p class="text-slate-400 mb-6 line-clamp-2">
+              {note.data.description}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {note.data.tags.map((tag) => (
+                <span class="bg-slate-950 border border-slate-800 text-slate-300 text-sm px-3 py-1 rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+</Layout>

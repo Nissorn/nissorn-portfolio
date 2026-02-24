@@ -1,0 +1,12 @@
+{
+  "useMarkdownLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "src/content/notes/assets",
+  "newLinkFormat": "relative",
+  "userIgnoreFilters": [
+    "node_modules/",
+    "node_modules/diff/dist/",
+    ".astro",
+    "public/"
+  ]
+}
