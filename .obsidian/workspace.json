@@ -185,9 +185,19 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "cc4638a70f051a86",
+  "active": "154a492021a334fc",
   "lastOpenFiles": [
+    "src/content/templates",
+    "src/content/notes/01-Projects/Test.md",
     "src/content/notes/01-Projects/first-project.mdx",
+    "src/pages/blog/[...slug].astro",
+    "src/pages/blog/index.astro",
+    "src/pages/blog",
+    "src/components/Navbar.astro",
+    "src/components",
+    "src/content/notes/02-Blog/Untitled.md",
+    "src/content/notes/02-Blog/Untitled.mdx.md",
+    "src/content/notes/02-Blog/Untitled.mdป.md",
     "src/content/notes/01-Projects/first-project.md"
   ]
 }
