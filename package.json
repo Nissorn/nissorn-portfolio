@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",
+    "@astrojs/starlight": "^0.37.6",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^5.17.1",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
+    "starlight-openapi": "^0.22.0",
     "tailwindcss": "^4.2.1"
   }
 }

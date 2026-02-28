@@ -1,0 +1,41 @@
+---
+import DefaultSidebar from '@astrojs/starlight/components/Sidebar.astro';
+import type { Props } from '@astrojs/starlight/props';
+
+const currentPath = Astro.url.pathname;
+const customProps = { ...Astro.props };
+
+// เพิ่ม Safety Check: ถ้าไม่มี sidebar ให้ส่งค่าว่างกลับไปเลยเพื่อไม่ให้ Crash
+const sidebarItems = customProps.sidebar ?? [];
+
+// 1. Naming Mapping Configuration (e.g., 'ai-engine' -> 'AI Engine')
+// This MUST match astro.config.mjs perfectly for routing string comparisons.
+const projectNameMap: Record<string, string> = {
+  'ai-engine': 'AI Engine',
+  'thai-stylometry': 'Thai Stylometry',
+  'study-guide': 'Study Guide AI'
+};
+
+const getProjectName = (folder: string) => 
+  projectNameMap[folder] || folder.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+
+// Extract active project folder from the path (e.g. /docs/ai-engine/... -> ai-engine)
+const match = currentPath.match(/^\/docs\/([^\/]+)/);
+const activeProject = match ? match[1] : null;
+
+if (activeProject && currentPath !== '/docs' && currentPath !== '/docs/') {
+  const targetLabel = getProjectName(activeProject);
+  
+  // Starlight OpenAPI now produces a separated sibling group. We filter for all 3!
+  customProps.sidebar = sidebarItems.filter((item: any) => 
+    item.label === `${targetLabel} Docs` || 
+    item.label === `${targetLabel} API` ||
+    item.label === `${targetLabel} Interactive`
+  );
+} else {
+  // Hide sidebar completely on the root /docs screen
+  customProps.sidebar = [];
+}
+---
+<DefaultSidebar {...customProps} />

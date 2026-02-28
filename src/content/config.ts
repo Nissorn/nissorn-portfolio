@@ -1,5 +1,6 @@
 // src/content/config.ts
 import { defineCollection, z } from 'astro:content';
+import { docsSchema } from '@astrojs/starlight/schema';
 
 const notes = defineCollection({
     type: 'content',
@@ -12,4 +13,7 @@ const notes = defineCollection({
     }),
 });
 
-export const collections = { 'notes': notes };
+export const collections = {
+    'notes': notes,
+    docs: defineCollection({ schema: docsSchema() }),
+};
