@@ -558,17 +558,16 @@ async def chat_with_rag(
 # Entry point
 # ---------------------------------------------------------------------------
 
+import asyncio
+
 if __name__ == "__main__":
     port = os.environ.get("PORT")
     if port:
         # Cloud Mode (Heroku SSE)
         print(f"Starting MCP in SSE mode on port {port}")
-        import uvicorn
-        from mcp.server.fastmcp import FastMCP
-
-        # Create the ASGI app from FastMCP
-        app = mcp.get_asgi_app() 
-        uvicorn.run(app, host="0.0.0.0", port=int(port))
+        mcp.settings.port = int(port)
+        mcp.settings.host = "0.0.0.0"
+        mcp.run(transport='sse')
     else:
         # Local Mode (Cursor Stdio)
         mcp.run()
