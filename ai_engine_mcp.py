@@ -563,7 +563,12 @@ if __name__ == "__main__":
     if port:
         # Cloud Mode (Heroku SSE)
         print(f"Starting MCP in SSE mode on port {port}")
-        mcp.run(transport='sse', host="0.0.0.0", port=int(port))
+        import uvicorn
+        from mcp.server.fastmcp import FastMCP
+
+        # Create the ASGI app from FastMCP
+        app = mcp.get_asgi_app() 
+        uvicorn.run(app, host="0.0.0.0", port=int(port))
     else:
         # Local Mode (Cursor Stdio)
         mcp.run()
