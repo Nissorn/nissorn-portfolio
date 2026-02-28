@@ -1,0 +1,67 @@
+---
+// src/pages/docs.astro
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// 1. Naming Mapping Configuration (e.g., 'ai-engine' -> 'AI Engine')
+const projectNameMap: Record<string, string> = {
+  'ai-engine': 'AI Engine',
+  'thai-stylometry': 'Thai Stylometry',
+  'study-guide': 'Study Guide AI'
+};
+
+const getProjectName = (folder: string) => 
+  projectNameMap[folder] || folder.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+const allDocs = await getCollection('docs');
+
+// Scan the precise physical file system using fs
+const docsDir = path.resolve('./src/content/docs/docs');
+let directories: string[] = [];
+
+if (fs.existsSync(docsDir)) {
+  directories = fs.readdirSync(docsDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+}
+
+// Map over each discovered directory and extract title/description safely
+const projects = directories.map(dir => {
+  const overviewDoc = allDocs.find(doc => 
+    doc.id === `docs/${dir}/overview.mdx` || doc.id === `docs/${dir}/overview.md`
+  );
+  
+  // Format the raw directory name via our strict Map for guaranteed exact casing
+  const formattedTitle = getProjectName(dir);
+
+  return {
+    title: overviewDoc?.data.title || formattedTitle,
+    description: overviewDoc?.data.description || `Explore the documentation and API reference for the ${formattedTitle} microservice.`,
+    link: `/docs/${dir}/overview`
+  };
+});
+---
+
+<Layout title="Documentation Hub">
+  <main class="max-w-3xl mx-auto px-6 py-12 md:py-20 animate-fade-in-up">
+    <header class="mb-12">
+      <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-4">Documentation Hub</h1>
+      <p class="text-zinc-600 dark:text-zinc-400 text-lg">
+        Central repository for all AI microservices and project specifications.
+      </p>
+    </header>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      {projects.map((project) => (
+        <a href={project.link} class="group block p-6 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:border-black dark:hover:border-white transition-all bg-zinc-50 dark:bg-zinc-900/50">
+          <h2 class="text-xl font-semibold mb-2 group-hover:text-blue-500 transition-colors">{project.title} &rarr;</h2>
+          <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
+            {project.description}
+          </p>
+        </a>
+      ))}
+    </div>
+  </main>
+</Layout>

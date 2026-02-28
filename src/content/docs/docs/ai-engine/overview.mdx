@@ -1,0 +1,186 @@
+---
+title: AI Engine — ภาพรวม
+description: ภาพรวม สถาปัตยกรรม ข้อควรรู้ก่อนใช้งาน workflow และ database schema ของ AI Engine Microservice
+---
+
+import { Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
+
+# AI Engine
+
+**AI Engine** คือ microservice สำหรับงาน AI ทั้งหมดของแพลตฟอร์ม HolySheet ให้บริการสามด้านหลัก ได้แก่
+การวิเคราะห์เอกสาร PDF (OCR + สรุปเนื้อหา), ถอดเสียงไฟล์เสียง (Whisper ASR) และ RAG Chat
+(ตอบคำถามจากเนื้อหาชีทที่บันทึกไว้)
+
+<CardGrid>
+  <Card title="📄 OCR & วิเคราะห์เนื้อหา" icon="document">
+    แปลง PDF → ข้อความ แล้วสรุปเนื้อหา + ประเมินจุดเด่น + แท็กด้วย Typhoon LLM
+  </Card>
+  <Card title="🎙️ ถอดเสียง" icon="microphone">
+    อัปโหลดไฟล์เสียง (.mp3/.wav/.m4a ฯลฯ) แล้วถอดเป็นข้อความ + บทสรุปบรรยาย
+  </Card>
+  <Card title="💬 RAG Chat" icon="comment">
+    สนทนากับ AI โดย inject เนื้อหาชีทเป็น context พร้อม semantic cache ผ่าน Supabase
+  </Card>
+</CardGrid>
+
+---
+
+## สถาปัตยกรรมโดยย่อ
+
+```
+Client
+  │
+  ▼
+FastAPI (src/main.py)
+  ├── /ocr          → ocr_service       → Typhoon Vision
+  ├── /sheets       → analysis_service  → Typhoon LLM  →  AnalyzeJob (SQLite)
+  ├── /api/audio    → audio_processor   → Whisper ASR  →  AiDatasetRecord (SQLite)
+  └── /api/chat     → chat_service      → Typhoon LLM + Supabase Vector
+```
+
+**Tech Stack:** Python 3.10 · FastAPI · SQLAlchemy 2.0 (Async, SQLite) · Typhoon LLM · Whisper · Supabase
+
+---
+
+## `sheet_id` — key กลางของระบบ
+
+`sheet_id` คือ ID ของชีทที่มาจาก **Product Service ฝั่ง Frontend** ไม่ใช่ค่าที่ AI Engine สร้างขึ้นเอง
+ฝั่ง Frontend เป็นผู้ generate และส่งมาให้ AI Engine ใช้เป็น key เชื่อมข้อมูลตลอดกระบวนการ
+
+<Aside type="tip" title="ทำไม sheet_id จึงสำคัญ">
+`sheet_id` ทำหน้าที่เป็น **key กลาง** ที่ใช้ได้ในทุกขั้นตอน:
+
+1. **ตอน Analyze** — ส่ง `sheet_id` พร้อม PDF ไปยัง `/sheets/analyze` เพื่อผูก job กับชีทนั้น
+2. **ตอน Poll** — ตรวจสถานะ job ด้วย `GET /sheets/jobs/by-sheet/{sheet_id}` โดยไม่ต้องเก็บ `job_id`
+3. **ตอน Chat** — ส่ง `sheet_id` เดิมไปยัง `/api/chat/` เพื่อให้ AI เข้าถึงเนื้อหาชีทนั้นเป็น RAG context
+</Aside>
+
+**สองโหมดของ RAG Chat ขึ้นอยู่กับ `sheet_id`:**
+
+| `sheet_id` ใน `/api/chat/` | โหมด | บริบท |
+|---|---|---|
+| **ระบุค่า** (ลูกค้าซื้อชีทแล้ว) | 🎓 Tutor Mode | AI เข้าถึงเนื้อหาในชีทนั้น ตอบคำถามอิงเนื้อหาจริง |
+| **`null`** (user อยู่หน้า Home) | 🛍️ Sales Mode | AI ไม่เข้าถึงเนื้อหาใด ทำหน้าที่แนะนำชีทให้ลูกค้าซื้อ |
+
+---
+
+## ตัวอย่าง Workflow
+
+### Workflow 1 — วิเคราะห์ PDF แล้วถาม RAG Chat (กรณีหลัก)
+
+กรณีใช้งานหลัก: ลูกค้าซื้อชีทแล้ว ฝั่ง Frontend ส่งไฟล์มาวิเคราะห์ก่อน จากนั้นลูกค้าสามารถถาม Chatbot เกี่ยวกับเนื้อหาในชีทนั้นได้
+
+<Steps>
+1. **Frontend gen `sheet_id`** จาก Product Service (UUID ของชีทในระบบ)
+2. ส่ง `POST /sheets/analyze` พร้อม PDF + `sheet_id` นั้น → ได้ `job_id` กลับมาทันที
+3. Poll `GET /sheets/jobs/by-sheet/{sheet_id}` จนได้ `status: "completed"`
+4. (ทางเลือก) แสดงผล `result.summary`, `result.assessment`, `result.tags` ให้ผู้ขาย/ผู้ดูแลระบบ
+5. เมื่อลูกค้าเปิด Chat บนหน้าชีทนั้น → ส่ง `POST /api/chat/` พร้อม `sheet_id` เดิม → AI เข้าถึงเนื้อหาได้ทันที
+</Steps>
+
+```
+// 1. Frontend มี sheet_id อยู่แล้ว เช่น "uuid-sheet-abc"
+
+// 2. วิเคราะห์ PDF
+POST /sheets/analyze
+{ file: mypdf.pdf, sheet_id: "uuid-sheet-abc" }
+→ { job_id: "job-123", sheet_id: "uuid-sheet-abc", status: "pending" }
+
+// 3. Poll ด้วย sheet_id (ไม่ต้องเก็บ job_id)
+GET /sheets/jobs/by-sheet/uuid-sheet-abc
+→ { status: "completed", result: { summary: "...", assessment: [...], tags: [...] } }
+
+// 4. ลูกค้าถาม Chatbot (Tutor Mode)
+POST /api/chat/
+{ session_id: "s1", message: "เนื้อหาเน้นเรื่องอะไร", sheet_id: "uuid-sheet-abc" }
+→ { message: "ชีทนี้เน้นเรื่อง..." }
+```
+
+### Workflow 2 — RAG Chat หน้า Home (Sales Mode)
+
+กรณี user เปิด Chatbot บนหน้า Home ยังไม่ได้เลือกหรือซื้อชีทใด
+
+```
+POST /api/chat/
+{ session_id: "s2", message: "มีชีทแคลคูลัสไหม", sheet_id: null }
+→ { message: "มีชีท Calculus 101 ของ... แนะนำให้ลองดูครับ" }
+// AI ทำหน้าที่แนะนำชีท ไม่สามารถเข้าถึงเนื้อหาใด ๆ ได้
+```
+
+### Workflow 3 — ถอดเสียงบรรยาย
+
+<Steps>
+1. ส่ง `POST /api/audio/transcribe` พร้อมไฟล์เสียง → ได้ `job_id`
+2. Poll `GET /sheets/jobs/{job_id}` จนได้ `status: "completed"`
+3. อ่าน `result.summary` และ `result.raw_text_snippet`
+</Steps>
+
+```
+POST /api/audio/transcribe   (file=lecture.mp3)
+→ { job_id: "def-456", status: "processing" }
+
+GET /sheets/jobs/def-456
+→ { result: { dataset_id: 42, summary: "...", raw_text_snippet: "..." } }
+```
+
+---
+
+## Database Schema (AI Engine)
+
+AI Engine ใช้ **SQLite แบบ embedded** (ไม่ใช่ PostgreSQL ของ service อื่นในระบบ)
+ไฟล์ DB อยู่ที่ `./data/jobs.db`
+
+### `analyze_jobs`
+
+เก็บ job ของการวิเคราะห์ PDF และถอดเสียง
+
+| Column | Type | คำอธิบาย |
+|---|---|---|
+| `id` | `UUID` (PK) | job ID ที่ระบบสร้างอัตโนมัติ |
+| `sheet_id` | `string` (nullable) | **sheet ID จาก Product Service ฝั่ง Frontend** — key กลางสำหรับ poll และ RAG Chat |
+| `status` | `string` | `pending` / `processing` / `completed` / `failed` |
+| `result` | `JSON` (nullable) | ผลวิเคราะห์ทั้งหมด |
+| `error_message` | `string` (nullable) | รายละเอียดข้อผิดพลาด (มีเฉพาะเมื่อ `failed`) |
+| `webhook_url` | `string` (nullable) | URL สำหรับ webhook callback |
+| `created_at` | `datetime` | เวลาที่สร้าง job |
+
+### `ai_dataset_records`
+
+เก็บเนื้อหาชีทที่ผ่านการวิเคราะห์หรือถอดเสียงแล้ว ใช้เป็น RAG source สำหรับ `/api/chat/`
+
+| Column | Type | คำอธิบาย |
+|---|---|---|
+| `id` | `integer` (PK, autoincrement) | primary key ภายใน AI Engine |
+| `filename` | `string` | ชื่อไฟล์ต้นทาง |
+| `source_type` | `string` | `audio` หรือ `pdf` |
+| `raw_text` | `text` (nullable) | transcript เต็มรูปแบบ |
+| `summary_text` | `text` (nullable) | บทสรุปที่ AI สร้างขึ้น |
+| `created_at` | `datetime` | เวลาที่บันทึก |
+
+### `chat_history`
+
+เก็บ conversation history แยกตาม `session_id` (ดึงล่าสุด 20 ข้อความ)
+
+| Column | Type | คำอธิบาย |
+|---|---|---|
+| `session_id` | `string` | ID ของ session สนทนา |
+| `sheet_id` | `string` (nullable) | sheet ที่เชื่อมกับ session นี้ |
+| `role` | `string` | `user` หรือ `assistant` |
+| `content` | `text` | เนื้อหาข้อความ |
+| `created_at` | `datetime` | เวลาที่บันทึก |
+
+---
+
+## MCP Tools (ai_engine_mcp.py)
+
+สำหรับการใช้งานผ่าน Model Context Protocol (เช่น VS Code Copilot Agent)
+ทุก tool poll จนงานเสร็จโดยอัตโนมัติ ไม่ต้องรอด้วยตัวเอง
+
+| Tool | เรียก Endpoint | คำอธิบาย |
+|---|---|---|
+| `extract_text_ocr` | `POST /ocr/extract` | แยกข้อความจาก PDF (sync) |
+| `analyze_sheet` | `POST /sheets/analyze` | วิเคราะห์ PDF แบบ async (poll จนเสร็จ) |
+| `get_job_status` | `GET /sheets/jobs/{job_id}` | ดูสถานะ job ด้วย job_id |
+| `get_job_by_sheet_id` | `GET /sheets/jobs/by-sheet/{sheet_id}` | ดูสถานะ job ด้วย sheet tag |
+| `transcribe_audio` | `POST /api/audio/transcribe` | ถอดเสียงแบบ async (poll จนเสร็จ) |
+| `chat_with_rag` | `POST /api/chat/` | สนทนากับ AI (+ RAG ถ้ามี `sheet_id`) |

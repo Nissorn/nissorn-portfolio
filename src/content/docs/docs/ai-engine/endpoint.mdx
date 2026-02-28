@@ -1,0 +1,324 @@
+---
+title: AI Engine — API Reference
+description: รายละเอียด endpoint ทุกตัวของ AI Engine Microservice พร้อม request/response และ error codes
+---
+
+import { Aside, Badge, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+# API Reference
+
+Base URL: `http://165.232.171.127`
+
+---
+
+## `POST /ocr/extract`
+
+แยกข้อความดิบจาก PDF แบบ synchronous รับผลกลับมาทันทีโดยไม่มี job queue
+
+**Request**
+
+```http
+POST /ocr/extract
+Content-Type: multipart/form-data
+```
+
+| Field | Type | Required | คำอธิบาย |
+|---|---|---|---|
+| `file` | `File` (PDF) | ✅ | ไฟล์ PDF ที่ต้องการแยกข้อความ |
+
+**Response `200 OK`**
+
+```json
+{
+  "text": "เนื้อหาข้อความทั้งหมดที่แยกได้จาก PDF..."
+}
+```
+
+**Error Codes**
+
+| Status | เหตุผล |
+|---|---|
+| `400` | ไฟล์ที่อัปโหลดไม่ใช่ PDF |
+| `500` | OCR engine ทำงานล้มเหลว |
+
+---
+
+## `POST /sheets/analyze`
+
+<Badge text="202 Accepted" variant="note" />
+
+ส่ง PDF หรือ URL เพื่อเริ่ม async pipeline: OCR → Junk Filter → AI Analysis → บันทึกผลใน `AnalyzeJob`
+
+endpoint ตอบกลับ **ทันที** พร้อม `job_id` แล้วประมวลผลใน background
+
+**Request**
+
+```http
+POST /sheets/analyze
+Content-Type: multipart/form-data
+```
+
+| Field | Type | Required | คำอธิบาย |
+|---|---|---|---|
+| `file` | `File` (PDF) | ❌ * | ไฟล์ PDF |
+| `file_url` | `string` | ❌ * | URL สาธารณะของ PDF (http/https) |
+| `sheet_id` | `string` | ❌ | **sheet ID จาก Product Service (ฝั่ง Frontend)** — key กลางที่ใช้สำหรับ poll และ RAG Chat |
+| `webhook_url` | `string` | ❌ | URL ที่จะ POST ผลลัพธ์ให้เมื่อ job เสร็จ |
+
+<Aside type="note">ต้องระบุ `file` **หรือ** `file_url` อย่างน้อยหนึ่งอย่าง</Aside>
+
+**Response `202 Accepted`**
+
+```json
+{
+  "job_id": "7dd0671d-018d-4eb4-abce-6b160a2850b3",
+  "sheet_id": "my-custom-tag",
+  "status": "pending",
+  "message": "Job accepted. Processing in background."
+}
+```
+
+**Background Pipeline**
+
+<Steps>
+1. อัปโหลด PDF หรือดาวน์โหลดจาก URL
+2. OCR แยกข้อความ + นับหน้า
+3. Junk Filter — ตรวจเนื้อหาที่ไม่มีความหมาย
+4. AI Analysis — สร้าง summary, assessment points, tags ด้วย Typhoon LLM
+5. บันทึกผลลง `AnalyzeJob.result` (JSON)
+6. (optional) เรียก `webhook_url` พร้อมผลลัพธ์
+</Steps>
+
+**ผล job เมื่อ completed** (ดูได้ผ่าน `GET /sheets/jobs/{job_id}`)
+
+```json
+{
+  "filename": "async_job",
+  "ocr_content": "...",
+  "summary": "เอกสารนี้อธิบายการแปลงข้อมูลใน R...",
+  "assessment": [
+    "เน้นการใช้ pipe operator %>%",
+    "ครอบคลุม dplyr และ tidyr"
+  ],
+  "tags": ["#RProgramming", "#DataWrangling"],
+  "page_count": 16
+}
+```
+
+<Aside type="tip" title="ใช้ sheet_id เดิมเพื่อ poll และ RAG Chat">
+หลังจาก job เสร็จแล้ว Frontend สามารถใช้ `sheet_id` เดิมที่ส่งมา:
+- **Poll status** — `GET /sheets/jobs/by-sheet/{sheet_id}`
+- **RAG Chat** — `POST /api/chat/` พร้อม `sheet_id` เดิม เพื่อให้ AI เข้าถึงเนื้อหาชีทนั้น
+</Aside>
+
+**Error Codes**
+
+| Status | เหตุผล |
+|---|---|
+| `400` | ไม่มีไฟล์หรือ URL / ไฟล์ไม่ใช่ PDF / เนื้อหาว่าง |
+| `500` | ข้อผิดพลาดภายใน server |
+
+---
+
+## `GET /sheets/jobs/{job_id}`
+
+ตรวจสถานะและผลลัพธ์ของ job ด้วย UUID ที่ได้จาก `/sheets/analyze` หรือ `/api/audio/transcribe`
+
+**Request**
+
+```http
+GET /sheets/jobs/7dd0671d-018d-4eb4-abce-6b160a2850b3
+```
+
+**Response `200 OK`**
+
+```json
+{
+  "job_id": "7dd0671d-018d-4eb4-abce-6b160a2850b3",
+  "status": "completed",
+  "result": { },
+  "error_message": null,
+  "created_at": "2026-02-28T10:00:00"
+}
+```
+
+**สถานะที่เป็นไปได้**
+
+| `status` | ความหมาย |
+|---|---|
+| `pending` | รอคิว |
+| `processing` | กำลังประมวลผล |
+| `completed` | เสร็จสิ้น — อ่านผลใน `result` |
+| `failed` | ล้มเหลว — อ่านเหตุผลใน `error_message` |
+
+**Error Codes**
+
+| Status | เหตุผล |
+|---|---|
+| `404` | ไม่พบ job ที่มี `job_id` นี้ |
+
+---
+
+## `GET /sheets/jobs/by-sheet/{sheet_id}`
+
+ดึง job ล่าสุดที่ tagged ด้วย `sheet_id` string ที่กำหนดเองตอนส่ง `POST /sheets/analyze`
+มีประโยชน์เมื่อไม่ได้เก็บ `job_id` ไว้
+
+**Request**
+
+```http
+GET /sheets/jobs/by-sheet/my-custom-tag
+```
+
+**Response `200 OK`**
+
+```json
+{
+  "job_id": "7dd0671d-018d-4eb4-abce-6b160a2850b3",
+  "sheet_id": "my-custom-tag",
+  "status": "completed",
+  "result": { },
+  "error_message": null,
+  "created_at": "2026-02-28T10:00:00"
+}
+```
+
+**Error Codes**
+
+| Status | เหตุผล |
+|---|---|
+| `404` | ไม่มี job ที่ใช้ sheet tag นี้ |
+
+---
+
+## `POST /api/audio/transcribe`
+
+<Badge text="Returns job_id" variant="note" />
+
+อัปโหลดไฟล์เสียง → แปลงเป็น mono MP3 ด้วย ffmpeg → แบ่ง chunk 10 นาที → ถอดเสียงด้วย Whisper
+→ สรุปบรรยาย → บันทึกลง `AiDatasetRecord` พร้อมคืน `dataset_id`
+
+**Request**
+
+```http
+POST /api/audio/transcribe
+Content-Type: multipart/form-data
+```
+
+| Field | Type | Required | คำอธิบาย |
+|---|---|---|---|
+| `file` | `File` | ✅ | ไฟล์เสียง (`.wav`, `.mp3`, `.m4a`, `.ogg`, `.flac`) |
+
+**Response `200 OK`** (ส่งกลับทันที)
+
+```json
+{
+  "job_id": "a1b2c3d4-...",
+  "status": "processing"
+}
+```
+
+**ผล job เมื่อ completed** (ดูผ่าน `GET /sheets/jobs/{job_id}`)
+
+```json
+{
+  "status": "completed",
+  "result": {
+    "dataset_id": 42,
+    "summary": "บรรยายนี้อธิบายหลักการ Data Transformation...",
+    "raw_text_snippet": "สวัสดีครับนักศึกษาทุกคน วันนี้เราจะเรียนเรื่อง...",
+    "full_text_saved_in_dataset": true
+  }
+}
+```
+
+<Aside type="tip" title="ต่อกับ RAG Chat">
+นำ `dataset_id` (เช่น `42`) ไปใช้เป็น `sheet_id` ใน `POST /api/chat/`
+เพื่อให้ AI อ่านเนื้อหาบรรยายนั้นเป็น context ในโหมด Tutor
+</Aside>
+
+**Error Codes**
+
+| Status | เหตุผล |
+|---|---|
+| `400` | นามสกุลไฟล์ไม่รองรับ |
+| `500` | ffmpeg แปลงไฟล์ล้มเหลว |
+
+---
+
+## `POST /api/chat/`
+
+<Badge text="Rate limit: 10 req/min" variant="caution" />
+
+สนทนากับ AI chatbot พร้อม conversation history ที่เก็บใน `chat_history`
+รองรับสองโหมดขึ้นอยู่กับว่าส่ง `sheet_id` มาด้วยหรือไม่
+
+**โหมดการทำงาน**
+
+<Tabs>
+  <TabItem label="🎓 Tutor Mode (ลูกค้าซื้อชีทแล้ว)">
+    เมื่อส่ง `sheet_id` (คือ sheet ID จาก Product Service) มาด้วย:
+    - AI Engine ค้นหาเนื้อหาชีทนั้นใน DB แล้ว inject เข้าไปเป็น system prompt
+    - AI ทำหน้าที่เป็น "ติวเตอร์ส่วนตัว" ตอบคำถามอิงเนื้อหาในชีทเป็นหลัก
+    - เปิดใช้ **Semantic Cache** ผ่าน Supabase vector store
+      — หากมีคำถามคล้ายกัน (similarity ≥ 0.85) ตอบจาก cache โดยไม่เรียก LLM
+    - `logs.cache_hit: true` เมื่อตอบจาก cache
+  </TabItem>
+  <TabItem label="🛍️ Sales Mode (user อยู่หน้า Home)">
+    เมื่อ `sheet_id` เป็น `null`:
+    - AI ไม่สามารถเข้าถึงเนื้อหาชีทใด ๆ ได้
+    - ใช้ keyword จากข้อความ user ค้นชีทที่น่าสนใจใน DB แล้วแนะนำ
+    - ห้ามแนะนำชีทที่ไม่มีอยู่จริงในระบบ (No Hallucination)
+    - Semantic Cache ถูกปิดในโหมดนี้
+  </TabItem>
+</Tabs>
+
+**Request**
+
+```http
+POST /api/chat/
+Content-Type: application/json
+```
+
+```json
+{
+  "session_id": "user-abc-session-001",
+  "message": "เนื้อหาในชีทนี้เน้นเรื่องอะไรเป็นหลัก",
+  "sheet_id": "42"
+}
+```
+
+| Field | Type | Required | คำอธิบาย |
+|---|---|---|---|
+| `session_id` | `string` | ✅ | ID ของ session (ใช้ซ้ำเพื่อรักษา conversation history) |
+| `message` | `string` | ✅ | ข้อความของ user |
+| `sheet_id` | `string` \| `null` | ❌ | **sheet ID จาก Product Service** — เป็น key เดียวกับที่ใช้ตอน `/sheets/analyze` • Tutor Mode เมื่อระบุ / Sales Mode เมื่อ `null` |
+
+**Response `200 OK`**
+
+```json
+{
+  "session_id": "user-abc-session-001",
+  "message": "ชีทนี้เน้นเรื่องการจัดการและแปลงข้อมูลด้วย R โดยใช้ dplyr...",
+  "sheet_id": "42",
+  "logs": {
+    "cache_hit": false,
+    "model": "typhoon-v2.5-30b-a3b-instruct"
+  }
+}
+```
+
+| Field | Type | คำอธิบาย |
+|---|---|---|
+| `session_id` | `string` | echo กลับมา |
+| `message` | `string` | คำตอบของ AI |
+| `sheet_id` | `string` \| `null` | echo กลับมา |
+| `logs.cache_hit` | `boolean` | `true` = ตอบจาก semantic cache |
+| `logs.model` | `string` | ชื่อ model ที่ใช้ (มีเฉพาะเมื่อ `cache_hit: false`) |
+
+**Error Codes**
+
+| Status | เหตุผล |
+|---|---|
+| `429` | เกิน rate limit (10 req/min) |
+| `500` | ข้อผิดพลาด LLM หรือ DB |
