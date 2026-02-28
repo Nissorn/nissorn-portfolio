@@ -202,6 +202,8 @@
   },
   "active": "842966ed2f502dc9",
   "lastOpenFiles": [
+    "requirements.txt",
+    "Procfile",
     "dist/pagefind/wasm.unknown.pagefind",
     "dist/pagefind/pagefind-ui.js",
     "dist/pagefind/pagefind-entry.json",
@@ -211,8 +213,6 @@
     "dist/pagefind/pagefind-highlight.js",
     "dist/pagefind/pagefind.js",
     "dist/pagefind/index/en_8437c9c.pf_index",
-    "dist/pagefind/fragment/en_fc7c41a.pf_fragment",
-    "dist/pagefind/fragment/en_f98761a.pf_fragment",
     "dist/profile.jpg",
     "dist/favicon.svg",
     "src/content/docs/study-guide/index.md",

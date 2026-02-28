@@ -559,4 +559,11 @@ async def chat_with_rag(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    port = os.environ.get("PORT")
+    if port:
+        # Cloud Mode (Heroku SSE)
+        print(f"Starting MCP in SSE mode on port {port}")
+        mcp.run(transport='sse', host="0.0.0.0", port=int(port))
+    else:
+        # Local Mode (Cursor Stdio)
+        mcp.run()
